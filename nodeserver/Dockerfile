@@ -1,7 +1,14 @@
 FROM node:6.4.0
 
 ARG CONTAINER_DIR
+ARG DEV_DIR
 
-RUN mkdir -p $CONTAINER_DIR
+RUN mkdir -p $CONTAINER_DIR && cd $CONTAINER_DIR
+WORKDIR $CONTAINER_DIR
+
+COPY . $CONTAINER_DIR
+
+# RUN npm install
 
 EXPOSE 3000
+CMD [ "npm", "start" ]
