@@ -1,33 +1,24 @@
 var express = require('express');
-var mongodb = require('mongodb');
 
 // Setup the route information for this entrypoint
 var STATIC_TEST = require('../static_test.js');
 var router = express.Router();
 
-// Setup the connection to the mongodb database
-var DB_INFO = require('../db_info.js');
-var mongoClient = mongodb.MongoClient;
-
-// Serve some data to the requester,
+// Serve some data to the requester, which is checked agains the .js file content. No DB lookup occurs
 router.get('/static', function(req, res, next) {
   var obj = STATIC_TEST.obj
   res.send(JSON.stringify(obj));
 });
 
+
+// Server some data from the database that matches known format (stored in a .js file) to test we can read from the DB
 router.get('/db_read', function(req, res, next) {
-  mongoClient.connect(DB_INFO.test_svr + '/' + DB_INFO.db_name, (err, db) => {
-    if (err)
-    {
-      console.log('DB Connection Error!');
+  req.app.locals.testData.find().toArray(function(err, result) {
+    if (err) {
+      // TBD - log that the connection to the test server is not available.
       throw err;
-    }
-    db.collection('testData').find().toArray(function(err, result) {
-      if (err) {
-        throw err;
-      }
-      res.send(JSON.stringify(result));
-    });
+  }
+  res.send(JSON.stringify(result));
   });
 });
 

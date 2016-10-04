@@ -11,25 +11,11 @@ var STATIC_TEST = require('./static_test.js');
 // Define test script variables
 var TEST_PORT = 3000;
 var TEST_HOST = 'localhost';
-var TEST_PATH = '/test/db_read'
+var TEST_PATH = '/test/'
 
 
-// Function to execute all of the test scripts
-var testScript = function () {
-  console.log('Test script running...');
-  basicNodeConnectivity(TEST_HOST, TEST_PORT); // Basic connectivity test, localhost
-};
-
-
-// Basic testing to ensure a simple connection
-var basicNodeConnectivity  = function (host, port) {
-  var options = {
-    host: host,
-    port: port,
-    path: TEST_PATH,
-    method: 'GET'
-  };
-
+// Helper function: requests data from the server using 'options', and compares it to a known object.
+var retrieveAndCompare = function (options, success, fail) {
   var str = ''; // Responce string - built iterativly as the callback below fires.
 
   // Make the request
@@ -43,17 +29,36 @@ var basicNodeConnectivity  = function (host, port) {
     res.on('end', () => {
       // Now that we've got the entire test object, let's compare it to our static test data.
       var objReceived = JSON.parse(str);
-      var objReference = STATIC_TEST.db_read; // Grab our test data
       for (var i = 0; i < objReceived.length; i++) {
         delete objReceived[i]._id; // Remove the _id data (automatically added by mongodb) from all items in the results array
       }
-      console.log(JSON.stringify(objReceived));
-      console.log(JSON.stringify(objReference));
-      console.log('Do the objects match: ' + (JSON.stringify(objReceived) == JSON.stringify(objReference)));
+      //console.log(JSON.stringify(objReceived) == JSON.stringify(objReference));
+      if (JSON.stringify(objReceived) == JSON.stringify(options.objReference)) {
+        success();
+      } else {
+        fail();
+      }
     });
   }).on('error', (err) => {
-    console.log("Connection Error: " + err.message); // Catch connection errors, e.g. port or host unavailable.
+    // TBC - log something useful to shomewhere persistant.
+    console.log("Nodeserver Connection Error: " + err.message); // Catch connection errors, e.g. port or host unavailable.
   }).end();
+};
+
+// Basic testing to ensure a simple connection
+var testScript  = function () {
+  console.log('Test script running...');
+  // Test the nodeserver can serve static content (without using a database read)
+  var options = { host: TEST_HOST, port: TEST_PORT, path: TEST_PATH + 'static', objReference : STATIC_TEST.obj };
+  retrieveAndCompare(options,
+    () => {console.log('Match!');},
+    () => {console.log('Missmatch!');});
+
+  // Test the database read against .js content
+  var options = { host: TEST_HOST, port: TEST_PORT, path: TEST_PATH + 'db_read', objReference : STATIC_TEST.db_read };
+  retrieveAndCompare(options,
+    () => {console.log('Match!');},
+    () => {console.log('Missmatch!');});
 }
 
 

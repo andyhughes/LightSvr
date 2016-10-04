@@ -10,10 +10,29 @@ var users = require('./routes/users');
 var test = require('./routes/test');
 
 var app = express();
+var mongodb = require('mongodb');
+
+
+// Initialise the mongodb database connection pool
+try {
+  var DB_INFO = require('./db_info.js'); // Grab the database server info from a static config file.
+  var mongoClient = mongodb.MongoClient;
+  mongoClient.connect(DB_INFO.test_svr + '/' + DB_INFO.db_name, (err, db) => { // Connect to the test DB
+    if (err) {
+      throw err; // Throw an error if there is a connection problem.
+    }
+    app.locals.testData = db.collection('testData'); // Connect to the collection, and make it available to the global app scope.
+  });
+} catch (err) {
+  console.log('DB Connection Error: ' + err.message);
+  process.exit(1);
+}
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -26,6 +45,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 app.use('/test', test);
+app.on('Andy', () => {console.log('Andy emit');});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
