@@ -2,7 +2,7 @@ module.exports = {
   obj : [{
   "name" : "static test",
   "subdocs" : {
-    "item1" : "abc",
+    "item1" : "ab1c",
     "item2" : "abc",
   },
   "array" : ["one", "two", "three"]}],

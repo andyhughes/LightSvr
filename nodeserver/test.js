@@ -4,14 +4,14 @@
 
 
 // Import required modules
-var http = require('http');
 var Promise = require('bluebird');
+var http = require('http');
 
 var STATIC_TEST = require('./static_test.js');
 
 
 // Define test script variables
-var TEST_PORT = 3000;
+var TEST_PORT = 300;
 var TEST_HOST = 'localhost';
 var TEST_PATH = '/test/'
 
@@ -21,6 +21,7 @@ var TestObj = function (name, desc) {
   var endTime = null; // Priave var to store end time
   var firedVar = false; // Private variable to see whether or not the test function has fired. Can only be updated by the func itself.
   var successVar = false; // Private variable that stores whether or not the test was a sucess.
+  var message = ''; // Used to pass error messages back in the results object.
   this.testName = (name) ? name : 'An unnamed test'; // Name of the test
   this.testDescription = (desc) ? desc : 'No description'; // Description of the test
 
@@ -31,77 +32,78 @@ var TestObj = function (name, desc) {
   };
 
   // Private method to finalise the metrics - must be called by run() when it is finished testing. Arg set as true if the test was successful.
-  this.end  = function (s) {
-    successVar = s; // Set the 'success' flag to indicate how the tests went.
+  this.end  = function (all_good, msg) {
+    successVar = all_good; // Set the 'success' flag to indicate how the tests went.
+    message = (msg) ? msg : ''; // Store an error message for debugging - optional.
     endTime = new Date().getTime(); // Remember the start time so we can calculate how long this took to complete.
   };
 
   // Public method that returns the results of a test.
   this.results = function  () {
-    return {'testName': this.testName, 'fired' : firedVar, 'success' : successVar, 'time' : (((startTime == null) || (endTime == null)) ? null : (endTime - startTime)) };
+    return {'testName': this.testName, 'fired' : firedVar, 'success' : successVar, 'time' : (((startTime == null) || (endTime == null)) ? null : (endTime - startTime)), 'message' : message };
   };
 
   // The test code should override the method below... this is then called when the test is fired.
-  this.run = function () {};
-
-  // Default behaviour when the functin is called is to execute the test code... the statement below ensures this happens
-  return this.run(); // This should always return a Promise object.
+  this.run = function () {}; // This should always return a Promise object.
 };
 
 
 // Helper function: requests data from the server using 'options', and compares it to a known object.
 var retrieveAndCompare = function (options) {
-  return new Promise(function (fulfill, reject) {
-    var str = ''; // Responce string - built iterativly as the callback below fires.
-
-    // Make the request
-    http.request(options, (res) => {
-      res.on('error', (err) => {
-        reject(new Error("Nodeserver Connection Error: " + err.message));  // Handle errors that are ommited _during_ the recieving callback
-      });
-      res.on('data', (chunk) => {
-        str += chunk;  // A chunk of data has been recieved, so append it to `str`
-      });
-      res.on('end', () => {
-        // Now that we've got the entire test object, let's compare it to our static test data.
-        var objReceived = JSON.parse(str);
-        for (var i = 0; i < objReceived.length; i++) {
-          delete objReceived[i]._id; // Remove the _id data (automatically added by mongodb) from all items in the results array
-        }
-        //console.log(JSON.stringify(objReceived) == JSON.stringify(objReference));
-        if (JSON.stringify(objReceived) == JSON.stringify(options.objReference)) {
-          console.log('test func found a match');
-          fulfill();
-        } else {
-          console.log('test func did not match');
-          reject();
-        }
-      });
-    }).on('error', (err) => {
-      reject(new Error("Nodeserver Connection Error: " + err.message)); // Catch connection errors, e.g. port or host unavailable.
-    }).end();
-  }); //end of return
+return new Promise ((fulfill, reject) => {
+  var str = ''; // Responce string - built iterativly as the callback below fires.
+  // Make the request
+  http.request(options, (res) => {
+    res.on('error', (err) => {
+      console.log('Nodeserver Connection Error: ' + err.message);  // Handle errors that are ommited _during_ the recieving callback
+      reject();
+    });
+    res.on('data', (chunk) => {
+      str += chunk;  // A chunk of data has been recieved, so append it to `str`
+    });
+    res.on('end', () => {
+      // Now that we've got the entire test object, let's compare it to our static test data.
+      var objReceived = JSON.parse(str);
+      for (var i = 0; i < objReceived.length; i++) {
+        delete objReceived[i]._id; // Remove the _id data (automatically added by mongodb) from all items in the results array
+      }
+      if(JSON.stringify(objReceived) == JSON.stringify(options.objReference)) {
+        fulfill();
+      } else {
+        reject();
+      }
+    });
+  }).on('error', (err) => {
+    console.log('Nodeserver Connection Error: ' + err.message); // Catch connection errors, e.g. port or host unavailable.
+    reject();
+  }).end();
+});
 };
 
-var testFactory = function (options) {
-  return function () {
-    retrieveAndCompare(options);
-  };
-}
-
-
+// Test the nodeserver can serve static content (without using a database read)
 var StaticTest = function () {
-  TestObj.apply(this, ['Static data', 'Test the nodeserver can serve static content (no DB read)']);
-  this.run = function ()
-  {
-    this.begin(); // Set up the test object with tracking metrics.
+  TestObj.apply(this, ['Static data', 'Test the nodeserver can serve static content (no DB read)']); // Inherit from the TestObj object.
+  this.run = function () {
+    return new Promise ((fulfill, reject) => {
+      this.begin(); // Set up the test object with tracking metrics.
 
-    // Test code goes here. (DO NOT ALLOW CALLBACKS TO SHORT CIRCUIT THE TIMERS!!!)
-    for (let i = 0; i < 1000000000; i++){var dd = 'tt'; var ff = 'fffff'; var aa = dd.concat(ff);}
-    console.log('StaticTest.run() - this has overridded the TestObj run thingy');
-
-    this.end(true); // Write to the results object before finishing.
-
+      // Test code goes below. (DO NOT ALLOW CALLBACKS TO SHORT CIRCUIT THE TIMERS!!!)
+      var options = { host: TEST_HOST, port: TEST_PORT, path: TEST_PATH + 'static', objReference : STATIC_TEST.obj };
+      try {
+        retrieveAndCompare(options).then(
+          () => {
+            this.end(true, 'Match');
+            fulfill(); // Successful completion.
+          },
+          () => {
+            this.end(false, 'Patterns did not match!');
+            fulfill();
+          });
+        } catch (err) {
+          Console.log('Error caught in StaticTest!');
+          reject(); // Something wen't horribly wrong
+        }
+    });
   };
 };
 
@@ -109,12 +111,37 @@ var StaticTest = function () {
 var testScript  = function () {
   console.log('Test script running...');
   var testArray = [];
-  testArray.push(new TestObj());
+  var promiseArray = [];
+  testArray.push(new StaticTest());
+  testArray.push(new StaticTest());
   testArray.push(new StaticTest());
 
-  console.log(JSON.stringify(testArray[1].results()));
-  testArray[1].run();
-  console.log(JSON.stringify(testArray[1].results()));
+  console.log('Before running test:');
+  for (let test of testArray) {
+    console.log(JSON.stringify(test.results()));
+  }
+
+  // Populate the promise array with tests to perform... making sure that they aren't run yet (Promise.all() will run them shortly).
+  for (let test of testArray) {
+    promiseArray.push(test.run());
+  }
+
+  Promise.all(promiseArray).then (
+    // Handle success scenario:
+    () => {
+      console.log('All went to plan.... after running test:');
+      for (let test of testArray) {
+        console.log(JSON.stringify(test.results()));
+      }
+    },
+    // Handle failure scenario:
+    () => {
+      console.log('Something went horribly wrong!');
+      for (let test of testArray) {
+        console.log(JSON.stringify(test.results()));
+      }
+    }
+  );
   //console.log(testArray);
 
   // Build the array of tests with associated Results object
