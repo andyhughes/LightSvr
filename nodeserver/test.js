@@ -11,7 +11,7 @@ var STATIC_TEST = require('./static_test.js');
 
 
 // Define test script variables
-var TEST_PORT = 300;
+var TEST_PORT = 3000;
 var TEST_HOST = 'localhost';
 var TEST_PATH = '/test/'
 
@@ -55,8 +55,7 @@ return new Promise ((fulfill, reject) => {
   // Make the request
   http.request(options, (res) => {
     res.on('error', (err) => {
-      console.log('Nodeserver Connection Error: ' + err.message);  // Handle errors that are ommited _during_ the recieving callback
-      reject();
+      reject('Nodeserver Connection Error: ' + err.message); // Handle errors that are ommited _during_ the recieving callback
     });
     res.on('data', (chunk) => {
       str += chunk;  // A chunk of data has been recieved, so append it to `str`
@@ -70,12 +69,11 @@ return new Promise ((fulfill, reject) => {
       if(JSON.stringify(objReceived) == JSON.stringify(options.objReference)) {
         fulfill();
       } else {
-        reject();
+        reject('Test failed because the strings did not match!');
       }
     });
   }).on('error', (err) => {
-    console.log('Nodeserver Connection Error: ' + err.message); // Catch connection errors, e.g. port or host unavailable.
-    reject();
+    reject('Nodeserver Connection Error: ' + err.message); // Catch connection errors, e.g. port or host unavailable.
   }).end();
 });
 };
@@ -95,80 +93,91 @@ var StaticTest = function () {
             this.end(true, 'Match');
             fulfill(); // Successful completion.
           },
-          () => {
-            this.end(false, 'Patterns did not match!');
+          (err) => {
+            this.end(false, err);
             fulfill();
-          });
+            }
+          );
         } catch (err) {
-          Console.log('Error caught in StaticTest!');
-          reject(); // Something wen't horribly wrong
+          reject('Error caught in StaticTest!'); // Something wen't horribly wrong - this should never happen.
         }
     });
   };
 };
 
+// Test the nodeserver can serve data stored in the database - simple mongodb read.
+var DBReadTest = function () {
+  TestObj.apply(this, ['Static data', 'Test the nodeserver can serve static content (no DB read)']); // Inherit from the TestObj object.
+  this.run = function () {
+    return new Promise ((fulfill, reject) => {
+      this.begin(); // Set up the test object with tracking metrics.
+
+      // Test code goes below. (DO NOT ALLOW CALLBACKS TO SHORT CIRCUIT THE TIMERS!!!)
+      var options = { host: TEST_HOST, port: TEST_PORT, path: TEST_PATH + 'db_read', objReference : STATIC_TEST.db_read };
+      try {
+        retrieveAndCompare(options).then(
+          () => {
+            this.end(true, 'Match');
+            fulfill(); // Successful completion.
+          },
+          (err) => {
+            this.end(false, err);
+            fulfill();
+            }
+          );
+        } catch (err) {
+          reject('Error caught in StaticTest!'); // Something wen't horribly wrong - this should never happen.
+        }
+    });
+  };
+};
+
+
+// Pretty print function to handle the results of the testScript()
+var prettyPrintResults = function (duration, testArray) {
+  var failures = 0;
+  var results = null;
+  var times = [];
+  console.log('Results after all test completed:');
+  for (var test of testArray) {
+    r = test.results();
+    //console.log('     ' + JSON.stringify(r));
+    if (r.success) // Work out the average time of requests that return successfully.
+      times.push(r.time);
+    else
+      failures += 1; // Count the number of failed tests.
+  }
+  console.log('Test suite completed in: ' + duration + 'ms.');
+  console.log('Successess: ' + testArray.length + '. Failures: ' + failures + '. (There were ' + testArray.length + ' total test functions)');
+  var avg = times.reduce((a, b) => (a + b) / testArray.length, 0);
+  console.log('Average request time (successfully completed only): ' + avg.toFixed(2) + 'ms. Equiv to ' + (1000/avg).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' requests per second');
+}
+
 // Basic testing to ensure a simple connection
 var testScript  = function () {
   console.log('Test script running...');
-  var testArray = [];
-  var promiseArray = [];
-  testArray.push(new StaticTest());
-  testArray.push(new StaticTest());
-  testArray.push(new StaticTest());
+  var startTime = new Date().getTime(); // Start our timer showing how long it took all the tests to run.
 
-  console.log('Before running test:');
-  for (let test of testArray) {
-    console.log(JSON.stringify(test.results()));
+  var testArray = []; // Array containing all of the test functions we want to iterate over: note that these will be executed in parallel.
+  var promiseArray = []; // The Promise array ensures that all tests complete, and we wait for the promises to return before finalising the results and stopping the timer.
+
+  // Add the test we want to do to the testArray.
+  for (let i = 0; i < 2000; i++) {
+    testArray.push(new StaticTest());
+    testArray.push(new DBReadTest());
   }
 
-  // Populate the promise array with tests to perform... making sure that they aren't run yet (Promise.all() will run them shortly).
-  for (let test of testArray) {
-    promiseArray.push(test.run());
-  }
+
+  // Populate the promise array with tests to perform (from the above testArray)... making sure that they aren't run yet (Promise.all() will run them shortly).
+  for (let test of testArray) { promiseArray.push(test.run()); }
 
   Promise.all(promiseArray).then (
     // Handle success scenario:
-    () => {
-      console.log('All went to plan.... after running test:');
-      for (let test of testArray) {
-        console.log(JSON.stringify(test.results()));
-      }
-    },
+    () => {prettyPrintResults((new Date().getTime()) - startTime, testArray)},
     // Handle failure scenario:
-    () => {
-      console.log('Something went horribly wrong!');
-      for (let test of testArray) {
-        console.log(JSON.stringify(test.results()));
-      }
-    }
+    () => { console.log('Something went horribly wrong!'); }
   );
-  //console.log(testArray);
-
-  // Build the array of tests with associated Results object
-/*
-  var options = {};
-  options = { host: TEST_HOST, port: TEST_PORT, path: TEST_PATH + 'static', objReference : STATIC_TEST.obj };
-  testArray.push(new TestObj('Static data',testFactory(options), 'Test the nodeserver can serve static content (no DB read)'));
-  options = { host: TEST_HOST, port: TEST_PORT, path: TEST_PATH + 'db_read', objReference : STATIC_TEST.db_read };
-  testArray.push(new TestObj('DB Read',testFactory(options), 'Test the database read against .js content'));
-
-  for (let t of testArray) {
-    console.log(t.name + ': ' + t.description);
-    //t.func().then(()=>{t.result = true}, t.result = false);
-  }
-*/
-  // Test the nodeserver can serve static content (without using a database read)
-  //var options = { host: TEST_HOST, port: TEST_PORT, path: TEST_PATH + 'static', objReference : STATIC_TEST.obj };
-  //retrieveAndCompare(options,
-  //  () => {console.log('Match!');},
-  //  () => {console.log('Missmatch!');});
-
-  // Test the database read against .js content
-  //var options = { host: TEST_HOST, port: TEST_PORT, path: TEST_PATH + 'db_read', objReference : STATIC_TEST.db_read };
-  //retrieveAndCompare(options,
-  //  () => {console.log('Match!');},
-  //  () => {console.log('Missmatch!');});
-}
+};
 
 
 // Initiate the tests...
