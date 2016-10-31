@@ -48,7 +48,6 @@ app.use('/', routes);
 app.use('/users', users);
 app.use('/test', test);
 app.use('/LDF', LDF);
-app.on('Andy', () => {console.log('Andy emit');});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

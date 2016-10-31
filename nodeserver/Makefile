@@ -2,24 +2,26 @@ IMG_NAME = nodeserver
 VERSION = 0.1
 DEV_DIR = /Users/andrew/Code/LightSvr/nodeserver
 CONTAINER_DIR = /usr/share/nodeserver
-CONTAINER_NAME = LightSvr
+CONTAINER_NAME = lightsvr
 CONTAINER_BIN_DIR = /usr/bin
 PORT_EXPOSE = 3000
 PORT_INTERNAL = 3000
 NODESERVER_APP_NAME = app.js
 TEST_SCRIPT = test.js
 JSHINT = /usr/local/bin/jshint
+DOCKERHUB_UID = lightdf
+TAG = 0.1
 
 .PHONY: build push shell run start stop rm release
 
 build:
-	docker build --build-arg CONTAINER_DIR=$(CONTAINER_DIR) --build-arg DEV_DIR=$(DEV_DIR) -t $(IMG_NAME):$(VERSION) $(DEV_DIR)
+	docker build --build-arg CONTAINER_DIR=$(CONTAINER_DIR) -t $(IMG_NAME):$(VERSION) $(DEV_DIR)
 
 runDev:
-	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) --link mongoSvr:mongoSvr -v $(DEV_DIR):$(CONTAINER_DIR) $(IMG_NAME):$(VERSION)
+	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) --link mongosvr:mongosvr -v $(DEV_DIR):$(CONTAINER_DIR) $(IMG_NAME):$(VERSION)
 
 runProd:
-	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) $(IMG_NAME):$(VERSION)
+	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) --link mongosvr:mongosvr $(IMG_NAME):$(VERSION)
 
 stop:
 	docker stop $(CONTAINER_NAME)
@@ -41,7 +43,7 @@ shell:
 
 test_static:
 	@echo "v---- Initiating static code test (using jshint, ES6) ----v"
-	@$(JSHINT) --config .jshintrc *.js
+	@$(JSHINT) --config .jshintrc *.js routes/*.js
 	@if [ $$? -eq 0 ] ; then echo "Success: static test passed (jshint) - no errors" ; fi
 	@echo "^---- Static test complete ----^"
 
@@ -51,6 +53,10 @@ test_dynamic:
 	@echo "^---- Dynamic node.js test script complete ----^"
 
 test: test_static test_dynamic
+
+push:
+	docker commit $(CONTAINER_NAME) $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(TAG)
+	docker push $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(TAG)
 
 run: runDev
 

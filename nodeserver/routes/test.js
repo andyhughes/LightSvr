@@ -6,7 +6,7 @@ var router = express.Router();
 
 // Serve some data to the requester, which is checked agains the .js file content. No DB lookup occurs
 router.get('/static', function(req, res, next) {
-  var obj = STATIC_TEST.static
+  var obj = STATIC_TEST.static;
   res.send(JSON.stringify(obj));
 });
 
