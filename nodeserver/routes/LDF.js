@@ -23,28 +23,18 @@ var router = express.Router();
 
     // List all the children's titles, in responce to a user submitted ID.
     router.get('/child_titles/:id', function(req, res, next) {
-      req.app.locals.LDF.find({'_id' : new mongo.ObjectId(req.params.id)}, {'_id' : 0, 'children' : 1}).toArray(function(err, result) {
+      req.app.locals.LDF.find({'parent' : new mongo.ObjectId(req.params.id)}, {'_id' : 1, 'title' : 1}).toArray(function(err, result) {
         if (err) { throw err; }
-        var list = result.shift().children; // Dump the list of children into an array... then lookup those names in the DB...
-
-console.log('The list is: ' + list[0].toString() == mongo.ObjectId('57f6b5e6f9be172e60d64d04').toString());
-        req.app.locals.LDF.find({'_id' : {$in: [mongo.ObjectId('57f6b5f3f9be172e60d64d06')]}}, {'_id' : 0, 'title' : 1}).toArray(function(err, names) {
-        if (err) { throw err; }
-console.log('The names are: \n' + names.length);
-          res.send(JSON.stringify(names));
-        });
+        //var list = result.map((t) => t.title);
+        res.send(JSON.stringify(result));
       });
     });
 
     // Default behaviour (when no criteria specified) is to send the titles of the top level items in the db structure.
     router.get('/child_titles/', function(req, res, next) {
-      req.app.locals.LDF.find({'parent' : null}, {'_id' : 0, 'title' : 1}).toArray(function(err, result) {
+      req.app.locals.LDF.find({'parent' : null}, {'_id' : 1, 'title' : 1}).toArray(function(err, result) {
         if (err) { throw err; }
-        var list = [];
-        result.forEach((r) => {
-          list.push(r.title);
-        });
-        res.send(JSON.stringify(list));
+        res.send(JSON.stringify(result));
       });
     });
 
