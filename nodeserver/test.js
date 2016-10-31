@@ -4,7 +4,11 @@
 
 
 // Import required modules
-var Promise = require('bluebird');
+
+/* jshint node: true */
+"use strict";
+
+var Promise = require('bluebird'); // jshint ignore:line
 var http = require('http');
 
 var STATIC_TEST = require('./static_test.js');
@@ -13,7 +17,7 @@ var STATIC_TEST = require('./static_test.js');
 // Define test script variables
 var TEST_PORT = 3000;
 var TEST_HOST = 'localhost';
-var TEST_PATH = '/test/'
+var TEST_PATH = '/test/';
 
 
 // This is the test object, which passess a link to the test function and returns statistics about the call.
@@ -103,7 +107,7 @@ var DBReadTest = function () {
 
 // Helper function to prettify a number
 var commarize = function (input, precision) {
-  if (precision == undefined)
+  if (precision === undefined)
     precision = 2;
   return input.toFixed(precision).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
@@ -118,7 +122,7 @@ var prettyPrintResults = function (duration, testArray) {
   console.log('   Test suite completed in: ' + commarize(duration/1000) + 's (equiv to ' + commarize(1000*duration/testArray.length, 0) + ' requests per second)');
   var successCount = testArray.filter( (test) => test.success).length;
   console.log('   Successess: ' + successCount + '. Failures: ' + (testArray.length - successCount) + '. (There were ' + testArray.length + ' total test functions)');
-}
+};
 
 
 // Basic testing to ensure a simple connection
@@ -138,7 +142,7 @@ var testScript  = function () {
   for (let test of testArray) { promiseArray.push(test.run()); }
 
   Promise.all(promiseArray).then (
-    () => {prettyPrintResults((new Date().getTime()) - startTime, testArray)},   // Handle success scenario:
+    () => {prettyPrintResults((new Date().getTime()) - startTime, testArray);},   // Handle success scenario:
     (err) => { console.log('Something went horribly wrong (relating the Promise array)! ' + err); }   // Handle failure scenario:
   );
 };

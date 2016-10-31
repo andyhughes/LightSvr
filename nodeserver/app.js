@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var test = require('./routes/test');
+var LDF = require('./routes/LDF');
 
 var app = express();
 var mongodb = require('mongodb');
@@ -17,11 +18,12 @@ var mongodb = require('mongodb');
 try {
   var DB_INFO = require('./db_info.js'); // Grab the database server info from a static config file.
   var mongoClient = mongodb.MongoClient;
-  mongoClient.connect(DB_INFO.test_svr + '/' + DB_INFO.db_name, (err, db) => { // Connect to the test DB
+  mongoClient.connect(DB_INFO.test_svr + '/', (err, db) => { // Connect to the test DB
     if (err) {
       throw err; // Throw an error if there is a connection problem.
     }
-    app.locals.testData = db.collection('testData'); // Connect to the collection, and make it available to the global app scope.
+    app.locals.testDataStatic = db.db(DB_INFO.test_db_name).collection(DB_INFO.test_collection_static); // Connect to the collection, and make it available to the global app scope.
+    app.locals.LDF = db.db(DB_INFO.LDF_db_name).collection(DB_INFO.LDF_collection); // Connect to the LDF collection.
   });
 } catch (err) {
   console.log('DB Connection Error: ' + err.message);
@@ -45,6 +47,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 app.use('/test', test);
+app.use('/LDF', LDF);
 app.on('Andy', () => {console.log('Andy emit');});
 
 // catch 404 and forward to error handler
