@@ -7,7 +7,8 @@ ARG PUBLIC_DIR
 
 WORKDIR $CONTAINER_DIR/$PUBLIC_DIR
 
-COPY public/* $CONTAINER_DIR/$PUBLIC_DIR
+COPY default.conf /etc/nginx/conf.d/
+COPY public $CONTAINER_DIR/$PUBLIC_DIR
 
 #RUN apt-get update && apt-get install -y git && cd /usr/share/nginx/html/ && git clone https://github.com/deliveryprinciples/LightSvr
 

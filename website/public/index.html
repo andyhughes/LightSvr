@@ -10,41 +10,117 @@
 <link rel="stylesheet" href="custom.css">
 <script src="jquery-2.2.4.js"></script>
 <script src="jquery.mobile-1.4.5.js"></script>
-<script src="static.js"></script>
 
 <script>
-$(document).ready(function(){
-      // Update anchors with the relevant static text/code.
-      $(".dividerAnchor").append(dividerString);
-      $(".menuAnchor").append(menuString);
-      $(".panelAnchor").append(panelString);
-      $(".footer").append(footerString);
-      $( "body>[data-role='panel']" ).panel();
+  // Set up the menu - so that this code can be reused throughout the pages.
+  var menuString =
+  '<div class="ui-grid-solo ui-responsive" align="center">'+
+    '<div data-role="controlgroup" data-theme="b" data-type="horizontal" class="ui-block-a" id="menu-bar">'+
+      '<a href="#about" class="ui-btn ui-shadow ui-corner-all">About</a>'+
+      '<a href="#principles" class="ui-btn ui-shadow ui-corner-all">Principles</a>'+
+      '<a href="#framework" class="ui-btn ui-shadow ui-corner-all">Framework</a>'+
+      '<a href="#measures" class="ui-btn ui-shadow ui-corner-all">Measures</a>'+
+      '<a href="#creators" class="ui-btn ui-shadow ui-corner-all">Creators</a>'+
+      '<a href="#signatories" class="ui-btn ui-shadow ui-corner-all">Signatories</a>'+
+      '<a href="#sign" class="ui-btn ui-shadow ui-corner-all">Sign</a>'+
+      '<a href="#contact" class="ui-btn ui-shadow ui-corner-all">Contact</a>'+
+    '</div>'+
+    '<div style="margin: 0px 17px;""><a id="menu-button" href="#nav" class="ui-btn ui-shadow ui-corner-all ui-icon-bars ui-btn-icon-right" style="float:right;">Menu</a></div>'+
+  '</div>';
 
-      // Form handlers - make the 'sign' page clean as possible.
-      $("#role").change(function () {
-        if(role.value=="Lawyer") {
-          $("#contain_role_lawyer").show();
-        } else {
-          $("#contain_role_lawyer").hide();
-          role_lawyer.value = "";
+  // Set up the divider - so that this code can be reused throughout the pages.
+  var dividerString =
+  '<a onclick="$.mobile.silentScroll(0)" class="ui-btn ui-shadow ui-corner-all ui-icon-carat-u ui-btn-icon-notext" data-role="button" style="float:left">Top</a>'+
+  '<a href="#nav" class="ui-btn ui-shadow ui-corner-all ui-icon-bars ui-btn-icon-notext" data-role="button" style="float:right">Menu</a>';
+
+  // Set up the panel - so that this code can be reused throughout the pages.
+  var panelString =
+  '<div data-role="panel" id="nav" data-position="right" data-position-fixed="true" data-display="push" data-theme="b">'+
+    '<h3 class="ui-bar-c ui-corner-all" style="margin:0px;font-size:1.3em;padding-top:10px;padding-bottom:10px;">Menu<h3>'+
+    '<div class="ui-body ui-body-c ui-corner-all" style="margin:0px;font-size:1.3em;text-align:right;">'+
+      '<a href="#about">About</a><br>'+
+      '<a href="#principles">Principles</a><br>'+
+      '<a href="#framework">Framework</a><br>'+
+      '<a href="#measures">Measures</a><br>'+
+      '<a href="#creators">Creators</a><br>'+
+      '<a href="#signatories">Signatories</a><br>'+
+      '<a href="#sign">Sign</a><br>'+
+      '<a href="#contact">Contact</a>'+
+      '<br><a href="#header" class="ui-btn ui-icon-delete ui-shadow ui-corner-all ui-btn-icon-notext" data-rel="close" style="float:right;">Close panel</a>'+
+    '</div>'+
+  '</div>';
+
+  // Set up the footer - so that this code can be reused throughout the pages.
+  var footerString ='<p>&copy; Copyright Legal Project Management Consortium 2016</p>';
+
+  // Automatically render the reusable code into the anchors distributed through the pages.
+  $(document).ready(function(){
+    // Update anchors with the relevant static text/code.
+    $(".dividerAnchor").append(dividerString);
+    $(".menuAnchor").append(menuString);
+    $(".panelAnchor").append(panelString);
+    $(".footer").append(footerString);
+    $( "body>[data-role='panel']" ).panel();
+
+    // Form handlers - make the 'sign' page clean as possible.
+    $("#role").change(function () {
+      if(role.value=="Lawyer") {
+        $("#contain_role_lawyer").show();
+      } else {
+        $("#contain_role_lawyer").hide();
+        role_lawyer.value = "";
+      }
+    });
+    $("#role_lawyer").change(function () {
+      // Don't do anything.
+    });
+
+    // Define the function which retrieves JSON data from the app server.
+    function updateAjax (rootObj) {
+      // Prep the data request, and fire it.
+      if (rootObj === undefined) { rootObj = ''}; // If the id is 'undefined', reset to being a zero length string (top of the object tree).
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          // Get the data and process it...
+          var objs = JSON.parse(this.responseText);
+          $("#frameworkAnchor").empty();  // Remove the current contents of the anchor.
+          // Build up the new contense of the anchor...
+          $("#frameworkAnchor").append('<ul data-role="listview" data-count-theme="b" data-inset="true" id=list></ul>');
+          $("#frameworkAnchor").listview().listview('refresh');
+          for (var o of objs) {
+            if (o.child_count > 3 ) { $("#list").append('<li id="' + o._id + '"><a>' + o.title + '<span class="ui-li-count">' + o.child_count + '</span></a></li>');}
+            else { $("#list").append('<li class="noclick" id="' + o._id + '">' + o.title + '</li>');}
+          }
+          $("#list").listview().listview('refresh'); // Embed the jQuery logic into the object.
+          $("#frameworkAnchor").listview().listview('refresh'); // Embed the jQuery logic into the object.
+          // Register the click handlers, but only for li elements with child nodes (labeled as the class ''.noclick')...
+          $("#list").children().each(function () {
+            if (!($(this).attr('class')).includes('noclick')) {
+              $(this).click(function () {
+                updateAjax(this.id)
+              });
+            }
+          });
         }
-      });
-      $("#role_lawyer").change(function () {
-        // Don't do anything.
-      });
+      };
+      xhttp.open('GET', '/LDF/child_titles/' + rootObj, true);
+      xhttp.send();
+    };
 
-      // Button handlers
-      $("#submitButton").click(function () {alert("I tried to submit the form!\n\nI didn't do any validation!")});
-      $("#messageButton").click(function () {alert("I tried to send an email...\n\nBut the back-end is not connected!")});
-});
+    // Fire the Ajax update on pageload.
+    updateAjax();
 
+    // Button handlers for handling the form subimissions.
+    $("#submitButton").click(function () {alert("I tried to submit the form!\n\nI didn't do any validation!");});
+    $("#messageButton").click(function () {alert("I tried to send an email...\n\nBut the back-end is not connected!");});
+  });
 
-$(document).one('pagebeforecreate', function () {
-    $.mobile.pageContainer.prepend(panelString);
-    $("#nav").panel().enhanceWithin();
-});
-
+  // Set up the panel, so that it can be accessed.
+  $(document).one('pagebeforecreate', function () {
+      $.mobile.pageContainer.prepend(panelString);
+      $("#nav").panel().enhanceWithin();
+  });
 </script>
 
 <style>
@@ -55,17 +131,18 @@ $(document).one('pagebeforecreate', function () {
 </style>
 </head>
 
+
 <!--      -->
 <!-- Body -->
 <!--      -->
 
 <body>
 
-  <!-- Sign Page -->
+  <!-- About Page -->
   <div data-role="page" id="about">
     <div data-role="header" data-theme="b" data-position="fixed" class="menuBar">
       <script>
-        document.write(menuString);
+        document.write(menuString); // jshint ignore:line
       </script>
     </div>
 
@@ -180,6 +257,27 @@ $(document).one('pagebeforecreate', function () {
     <div data-role="footer" data-theme="b" class="footer"></div>
   </div>
 
+
+  <!-- Framework Page -->
+  <div data-role="page" id="framework">
+    <div data-role="header" data-theme="b" data-position="fixed" class="menuBar">
+      <script>
+        document.write(menuString); // jshint ignore:line
+      </script>
+    </div>
+
+    <div data-role="main" class="ui-content" data-theme="b">
+      <h2 class="ui-bar-b ui-corner-all">Framework</h2>
+      <div class="ui-body ui-body-b ui-corner-all">
+        <div class="ui-field-contain">
+          <br>
+          <div id="frameworkAnchor"></div><br><br>
+        </div>
+        <div class="dividerAnchor"></div>
+      </div>
+    </div>
+    <div data-role="footer" data-theme="b" class="footer"></div>
+  </div>
 
 
   <!-- Measures of Success -->

@@ -16,10 +16,10 @@ build:
 	docker build --build-arg CONTAINER_DIR=$(CONTAINER_DIR) --build-arg PUBLIC_DIR=$(PUBLIC_DIR) -t $(IMG_NAME):$(VERSION) $(DEV_DIR)
 
 runDev:
-	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) -v $(DEV_DIR)/public:$(CONTAINER_DIR)/$(PUBLIC_DIR) $(IMG_NAME):$(VERSION)
+	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) --link lightsvr:lightsvr -v $(DEV_DIR)/public:$(CONTAINER_DIR)/$(PUBLIC_DIR) $(IMG_NAME):$(VERSION)
 
 runProd:
-	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) $(IMG_NAME):$(VERSION)
+	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) --link lightsvr:lightsvr $(IMG_NAME):$(VERSION)
 
 stop:
 	docker stop $(CONTAINER_NAME)
@@ -39,11 +39,18 @@ clean:
 shell:
 	docker exec -it $(CONTAINER_NAME) /bin/sh
 
-test:
+test_connection:
 	@echo "v---- Testing a basic web connectivity (to the container) ----v"
 	curl http://localhost:$(PORT_EXPOSE)/$(PUBLIC_DIR)
 	@if [ $$? -eq 0 ] ; then echo "Success: basic web connection test passed" ; fi
 	@echo "^---- Basic web connecivity test complete ----^"
+
+test_static:
+	@echo "v---- Static check of javascript syntax (jshint) ----v"
+	@jshint --extract=auto public/*.html
+	@if [ $$? -eq 0 ] ; then echo "Success: linting complete without errors" ; fi
+
+test: test_static test_connection
 
 push:
 	docker commit $(CONTAINER_NAME) $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(TAG)
