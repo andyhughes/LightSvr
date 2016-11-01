@@ -1,0 +1,25 @@
+The below is in the testdb.testData collection
+[
+{ "_id" : ObjectId("57ecfde9db368fec13f0d17c"), "owner" : "testUser", "title" : "Test element 1", "description" : { "text" : "Short description", "modified" : "12-May-2014" }, "attr" : [ "attr 1", "attr 2", "attr 3" ] },
+{ "_id" : ObjectId("57ecfe6cdb368fec13f0d17d"), "owner" : "testUser", "title" : "Test element 2", "description" : { "text" : "Short bio", "modified" : "21-Aug-2015" }, "attr" : [ "attr a", "attr b", "attr c" ] }
+]
+
+The below is in the LDF.v1 collection
+[
+{ "_id" : ObjectId("57f6b3e6f9be172e60d64cff"), "title" : "Why", "parent" : null, "children" : [ ObjectId("57f6b489f9be172e60d64d00"), ObjectId("57f6b489f9be172e60d64d01") ], "desc" : "" },
+{ "_id" : ObjectId("57f6b489f9be172e60d64d00"), "title" : "Frameworks and methodologies", "parent" : ObjectId("57f6b3e6f9be172e60d64cff"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b493f9be172e60d64d01"), "title" : "Delivery in a Dynamic Environment", "parent" : ObjectId("57f6b3e6f9be172e60d64cff"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b5a3f9be172e60d64d02"), "title" : "How", "parent" : null, "children" : [ ObjectId("57f6b5e6f9be172e60d64d04"), ObjectId("57f6b5f3f9be172e60d64d05"), ObjectId("57f6b5f3f9be172e60d64d06"), ObjectId("57f6b5f3f9be172e60d64d07"), ObjectId("57f6b5f3f9be172e60d64d08") ], "desc" : "" },
+{ "_id" : ObjectId("57f6b5a3f9be172e60d64d03"), "title" : "What", "parent" : null, "children" : [ ObjectId("57f6b5f3f9be172e60d64d09"), ObjectId("57f6b5f3f9be172e60d64d0a"), ObjectId("57f6b5f3f9be172e60d64d0b"), ObjectId("57f6b5f3f9be172e60d64d0c"), ObjectId("57f6b5f3f9be172e60d64d0d"), ObjectId("57f6b5f3f9be172e60d64d0e") ], "desc" : "" },
+{ "_id" : ObjectId("57f6b5e6f9be172e60d64d04"), "title" : "Initiating", "parent" : ObjectId("57f6b5a3f9be172e60d64d02"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b5f3f9be172e60d64d05"), "title" : "Planning", "parent" : ObjectId("57f6b5a3f9be172e60d64d02"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b604f9be172e60d64d06"), "title" : "Executing/Delivery", "parent" : ObjectId("57f6b5a3f9be172e60d64d02"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b621f9be172e60d64d07"), "title" : "Monitoring/Control", "parent" : ObjectId("57f6b5a3f9be172e60d64d02"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b632f9be172e60d64d08"), "title" : "Closing", "parent" : ObjectId("57f6b5a3f9be172e60d64d02"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b82cf9be172e60d64d09"), "title" : "Method (Process)", "parent" : ObjectId("57f6b5a3f9be172e60d64d03"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b8bdf9be172e60d64d0a"), "title" : "Environment (Comms, Connections, Relationships)", "parent" : ObjectId("57f6b5a3f9be172e60d64d03"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b8e8f9be172e60d64d0b"), "title" : "Information and Materials (Dependencies)", "parent" : ObjectId("57f6b5a3f9be172e60d64d03"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b902f9be172e60d64d0c"), "title" : "Measurement (MI, Metrics)", "parent" : ObjectId("57f6b5a3f9be172e60d64d03"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b916f9be172e60d64d0d"), "title" : "People", "parent" : ObjectId("57f6b5a3f9be172e60d64d03"), "children" : [ ], "desc" : "" },
+{ "_id" : ObjectId("57f6b93cf9be172e60d64d0e"), "title" : "Tools (Technology)", "parent" : ObjectId("57f6b5a3f9be172e60d64d03"), "children" : [ ], "desc" : "" }
+]
