@@ -21,7 +21,7 @@ router.get('/id/', function(req, res, next) {
   });
 });
 
-  // List all the children's titles, their IDs, and a count of their direct children.
+  // List all the childrens': : ID, title and a count of direct children.
   router.get('/child_titles/:id', function(req, res, next) {
     req.app.locals.LDF.find({'parent' : new mongo.ObjectId(req.params.id)}, {'_id' : 1, 'title' : 1, 'children' : 1}).toArray(function(err, result) {
       if (err) { throw err; }
@@ -30,7 +30,7 @@ router.get('/id/', function(req, res, next) {
     });
   });
 
-  // Default behaviour (when no criteria specified) is to return the top level items: titles and IDs and a count of their direct children.
+  // Default behaviour (when no criteria specified) is to return the top level items: ID, title and a count of direct children.
   router.get('/child_titles/', function(req, res, next) {
     req.app.locals.LDF.find({'parent' : null}, {'_id' : 1, 'title' : 1, 'children' : 1}).toArray(function(err, result) {
       if (err) { throw err; }
