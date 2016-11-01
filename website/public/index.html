@@ -25,7 +25,7 @@
       '<a href="#sign" class="ui-btn ui-shadow ui-corner-all">Sign</a>'+
       '<a href="#contact" class="ui-btn ui-shadow ui-corner-all">Contact</a>'+
     '</div>'+
-    '<div style="margin: 0px 17px;""><a id="menu-button" href="#nav" class="ui-btn ui-shadow ui-corner-all ui-icon-bars ui-btn-icon-right" style="float:right;">Menu</a></div>'+
+    '<div style="margin: 0px 17px;"><a id="menu-button" href="#nav" class="ui-btn ui-shadow ui-corner-all ui-icon-bars ui-btn-icon-right" style="float:right;">Menu</a></div>'+
   '</div>';
 
   // Set up the divider - so that this code can be reused throughout the pages.
@@ -54,7 +54,7 @@
   var footerString ='<p>&copy; Copyright Legal Project Management Consortium 2016</p>';
 
   // Automatically render the reusable code into the anchors distributed through the pages.
-  $(document).ready(function(){
+  $(document).ready(function() {
     // Update anchors with the relevant static text/code.
     $(".dividerAnchor").append(dividerString);
     $(".menuAnchor").append(menuString);
@@ -78,27 +78,33 @@
     // Define the function which retrieves JSON data from the app server.
     function updateAjax (rootObj) {
       // Prep the data request, and fire it.
-      if (rootObj === undefined) { rootObj = ''}; // If the id is 'undefined', reset to being a zero length string (top of the object tree).
+      if (rootObj === undefined || rootObj === null) { // If the ID is broken reset to being a zero length string (top of the object tree).
+        rootObj = '';
+      }
+
+      // Ajax request code...
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-          // Get the data and process it...
+          // Before we get the new data, we need to do some housekeeping...
           var objs = JSON.parse(this.responseText);
           $("#frameworkAnchor").empty();  // Remove the current contents of the anchor.
+
           // Build up the new contense of the anchor...
           $("#frameworkAnchor").append('<ul data-role="listview" data-count-theme="b" data-inset="true" id=list></ul>');
           $("#frameworkAnchor").listview().listview('refresh');
-          for (var o of objs) {
-            if (o.child_count > 3 ) { $("#list").append('<li id="' + o._id + '"><a>' + o.title + '<span class="ui-li-count">' + o.child_count + '</span></a></li>');}
+          objs.forEach(function (o) {
+            if (o.child_count > 0 ) { $("#list").append('<li id="' + o._id + '"><a>' + o.title + '<span class="ui-li-count">' + o.child_count + '</span></a></li>');}
             else { $("#list").append('<li class="noclick" id="' + o._id + '">' + o.title + '</li>');}
-          }
+          });
           $("#list").listview().listview('refresh'); // Embed the jQuery logic into the object.
           $("#frameworkAnchor").listview().listview('refresh'); // Embed the jQuery logic into the object.
+
           // Register the click handlers, but only for li elements with child nodes (labeled as the class ''.noclick')...
           $("#list").children().each(function () {
             if (!($(this).attr('class')).includes('noclick')) {
               $(this).click(function () {
-                updateAjax(this.id)
+                updateAjax(this.id); // Call the Ajax update to get the new data.
               });
             }
           });
@@ -106,15 +112,20 @@
       };
       xhttp.open('GET', '/LDF/child_titles/' + rootObj, true);
       xhttp.send();
-    };
+    }
 
-    // Fire the Ajax update on pageload.
-    updateAjax();
+    // A couple of items to setup the Agax pages ready for us to use...
+    updateAjax(); // Fire the Ajax update on pageload.
+
+    // Button handlers for interacting with the framework list items.
+    $("#list_back_button").click(function () {
+      updateAjax();
+    });
 
     // Button handlers for handling the form subimissions.
     $("#submitButton").click(function () {alert("I tried to submit the form!\n\nI didn't do any validation!");});
     $("#messageButton").click(function () {alert("I tried to send an email...\n\nBut the back-end is not connected!");});
-  });
+});
 
   // Set up the panel, so that it can be accessed.
   $(document).one('pagebeforecreate', function () {
@@ -271,7 +282,25 @@
       <div class="ui-body ui-body-b ui-corner-all">
         <div class="ui-field-contain">
           <br>
-          <div id="frameworkAnchor"></div><br><br>
+          <div id="frameworkAnchor"></div>
+          <br>
+          <div class="ui-grid-a ui-responsive">
+            <br>
+            <div class="ui-block-a">
+              <div style="margin: 0px 30px;">
+                <input type="button" value="Back" id="list_back_button">
+              </div>
+            </div>
+            <div class="ui-block-b">
+              <div style="margin: 0px 30px;">
+                <input type="button" value="New Item" id="list_new_item">
+              </div>
+            </div>
+            <br>
+          </div>
+
+
+
         </div>
         <div class="dividerAnchor"></div>
       </div>
