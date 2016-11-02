@@ -1,5 +1,0 @@
-#cloud-config
-
-runcmd:
-      - /usr/bin/docker pull lightdf/testwww
-      - /usr/bin/docker run --name www --rm -p 80:80 lightdf/testwww
