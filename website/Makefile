@@ -8,7 +8,6 @@ CONTAINER_BIN_DIR = /usr/bin
 PORT_EXPOSE = 80
 PORT_INTERNAL = 80
 DOCKERHUB_UID = lightdf
-TAG = 0.1
 
 .PHONY: build push shell run start stop rm release
 
@@ -16,10 +15,10 @@ build:
 	docker build --build-arg CONTAINER_DIR=$(CONTAINER_DIR) --build-arg PUBLIC_DIR=$(PUBLIC_DIR) -t $(IMG_NAME):$(VERSION) $(DEV_DIR)
 
 runDev:
-	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) --link lightsvr:lightsvr -v $(DEV_DIR)/public:$(CONTAINER_DIR)/$(PUBLIC_DIR) $(IMG_NAME):$(VERSION)
+	docker run -d --name $(CONTAINER_NAME) -p $(PORT_EXPOSE):$(PORT_INTERNAL) --link lightsvr:lightsvr -v $(DEV_DIR)/public:$(CONTAINER_DIR)/$(PUBLIC_DIR) $(IMG_NAME):$(VERSION)
 
 runProd:
-	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) --link lightsvr:lightsvr $(IMG_NAME):$(VERSION)
+	docker run -d --name $(CONTAINER_NAME) -p $(PORT_EXPOSE):$(PORT_INTERNAL) --link lightsvr:lightsvr $(IMG_NAME):$(VERSION)
 
 stop:
 	docker stop $(CONTAINER_NAME)
@@ -31,10 +30,11 @@ start:
 restart: stop run
 
 rm:
-	docker rmi $(IMG_NAME):$(VERSION)
+	-docker rmi $(IMG_NAME):$(VERSION)
+	-docker rmi $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(VERSION)
 
 clean:
-	docker images|grep \<none\>|awk '{print $$3}' | xargs docker rmi
+	-docker images|grep \<none\>|awk '{print $$3}' | xargs docker rmi
 
 shell:
 	docker exec -it $(CONTAINER_NAME) /bin/sh
@@ -53,8 +53,8 @@ test_static:
 test: test_static test_connection
 
 push:
-	docker commit $(CONTAINER_NAME) $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(TAG)
-	docker push $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(TAG)
+	docker commit $(CONTAINER_NAME) $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(VERSION)
+	docker push $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(VERSION)
 
 run: runDev
 

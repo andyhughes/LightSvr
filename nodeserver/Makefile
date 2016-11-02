@@ -7,13 +7,12 @@ DEV_DIR = /Users/andrew/Code/LightSvr/nodeserver
 CONTAINER_DIR = /usr/share/nodeserver
 CONTAINER_NAME = lightsvr
 CONTAINER_BIN_DIR = /usr/bin
-PORT_EXPOSE = 3000 ### Do not expose a port to the world in production - should only be accessible inside the container infrasctructure... but this access is needed for test.
+PORT_EXPOSE = 3000### Do not expose a port to the world in production - should only be accessible inside the container infrasctructure... but this access is needed for test.
 PORT_INTERNAL = 3000
 NODESERVER_APP_NAME = app.js
 TEST_SCRIPT = test.js
 JSHINT = /usr/local/bin/jshint
 DOCKERHUB_UID = lightdf
-TAG = 0.1
 API_DOCS_DIR = api_docs
 
 test_static:
@@ -32,7 +31,7 @@ build: test_static
 	docker build --build-arg CONTAINER_DIR=$(CONTAINER_DIR) -t $(IMG_NAME):$(VERSION) $(DEV_DIR)
 
 runDev:
-	docker run -d --name $(CONTAINER_NAME) -p $(PORT_INTERNAL):$(PORT_EXPOSE) --link mongosvr:mongosvr -v $(DEV_DIR):$(CONTAINER_DIR) $(IMG_NAME):$(VERSION)
+	docker run -d --name $(CONTAINER_NAME) -p $(PORT_EXPOSE):$(PORT_INTERNAL) --link mongosvr:mongosvr -v $(DEV_DIR):$(CONTAINER_DIR) $(IMG_NAME):$(VERSION)
 
 runProd:
 	docker run -d --name $(CONTAINER_NAME) --link mongosvr:mongosvr $(IMG_NAME):$(VERSION)
@@ -47,16 +46,17 @@ start:
 restart: stop run
 
 rm:
-	docker rmi $(IMG_NAME):$(VERSION)
+	-docker rmi $(IMG_NAME):$(VERSION)
+	-docker rmi $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(VERSION)
 
 clean:
-	docker images|grep \<none\>|awk '{print $$3}' | xargs docker rmi
+	-docker images|grep \<none\>|awk '{print $$3}' | xargs docker rmi
 
 shell:
 	docker exec -it $(CONTAINER_NAME) /bin/sh
 
 push:
-	docker commit $(CONTAINER_NAME) $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(TAG)
-	docker push $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(TAG)
+	docker commit $(CONTAINER_NAME) $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(VERSION)
+	docker push $(DOCKERHUB_UID)/$(CONTAINER_NAME):$(VERSION)
 
 run: runDev
