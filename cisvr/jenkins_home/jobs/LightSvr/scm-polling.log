@@ -1,0 +1,8 @@
+Started on Nov 2, 2016 11:46:00 AM
+Using strategy: Default
+[poll] Last Built Revision: Revision 982abe19af30e7ff3eba06f7ca89bf753de58a28 (refs/remotes/origin/master)
+ > git ls-remote -h https://github.com/deliveryprinciples/LightSvr.git # timeout=10
+Found 1 remote heads on https://github.com/deliveryprinciples/LightSvr.git
+[poll] Latest remote head revision on refs/heads/master is: 982abe19af30e7ff3eba06f7ca89bf753de58a28 - already built by 1
+Done. Took 5.6 sec
+No changes

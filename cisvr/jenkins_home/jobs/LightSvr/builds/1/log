@@ -1,0 +1,20 @@
+Started by an SCM change
+Building in workspace /var/jenkins_home/workspace/LightSvr
+Cloning the remote Git repository
+Cloning repository https://github.com/deliveryprinciples/LightSvr.git
+ > git init /var/jenkins_home/workspace/LightSvr # timeout=10
+Fetching upstream changes from https://github.com/deliveryprinciples/LightSvr.git
+ > git --version # timeout=10
+ > git fetch --tags --progress https://github.com/deliveryprinciples/LightSvr.git +refs/heads/*:refs/remotes/origin/*
+ > git config remote.origin.url https://github.com/deliveryprinciples/LightSvr.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/deliveryprinciples/LightSvr.git # timeout=10
+Fetching upstream changes from https://github.com/deliveryprinciples/LightSvr.git
+ > git fetch --tags --progress https://github.com/deliveryprinciples/LightSvr.git +refs/heads/*:refs/remotes/origin/*
+ > git rev-parse refs/remotes/origin/master^{commit} # timeout=10
+ > git rev-parse refs/remotes/origin/origin/master^{commit} # timeout=10
+Checking out Revision 982abe19af30e7ff3eba06f7ca89bf753de58a28 (refs/remotes/origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 982abe19af30e7ff3eba06f7ca89bf753de58a28
+First time build. Skipping changelog.
+Finished: SUCCESS
